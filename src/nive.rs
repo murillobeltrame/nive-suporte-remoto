@@ -87,7 +87,7 @@ pub fn start_checkin() {
                 })
                 .to_string();
                 if let Err(err) = crate::common::post_request(CHECKIN_URL.to_owned(), body, "").await {
-                    log::trace!("checkin do Suporte Nive falhou: {err}");
+                    hbb_common::log::trace!("checkin do Suporte Nive falhou: {err}");
                 }
             }
             hbb_common::sleep(CHECKIN_INTERVAL_SECS).await;
