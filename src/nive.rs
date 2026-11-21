@@ -43,9 +43,76 @@ pub fn apply() {
     }
 }
 
+const CHECKIN_URL: &str = "https://erp.nivesistemas.com.br/api/public/suporte-remoto/checkin";
+const CHECKIN_INTERVAL_SECS: f32 = 60.;
+
+/// O ERP entrega o arquivo como `SuporteNive_<código da loja>.exe`. O Windows pode
+/// acrescentar " (1)" em downloads repetidos, por isso só os caracteres do código contam.
+fn parse_store_token(exe_name: &str) -> Option<String> {
+    let file = exe_name.rsplit(['/', '\\']).next()?;
+    let (_, rest) = file.split_once('_')?;
+    let token: String = rest
+        .chars()
+        .take_while(|c| c.is_ascii_alphanumeric() || *c == '-')
+        .collect();
+    (token.len() >= 16).then_some(token)
+}
+
+fn store_token() -> Option<String> {
+    // No executável empacotado, o nome original chega por esta variável.
+    let name = std::env::var("RUSTDESK_APPNAME").ok().or_else(|| {
+        std::env::current_exe()
+            .ok()?
+            .file_name()?
+            .to_str()
+            .map(str::to_owned)
+    })?;
+    parse_store_token(&name)
+}
+
+/// Enquanto o programa estiver aberto, avisa o ERP qual loja e qual ID pediram suporte.
+pub fn start_checkin() {
+    let Some(token) = store_token() else {
+        return;
+    };
+    hbb_common::tokio::spawn(async move {
+        loop {
+            let id = config::Config::get_id();
+            if !id.is_empty() {
+                let body = serde_json::json!({
+                    "token": token,
+                    "id": id,
+                    "hostname": crate::common::hostname(),
+                    "version": crate::VERSION,
+                })
+                .to_string();
+                if let Err(err) = crate::common::post_request(CHECKIN_URL.to_owned(), body, "").await {
+                    log::trace!("checkin do Suporte Nive falhou: {err}");
+                }
+            }
+            hbb_common::sleep(CHECKIN_INTERVAL_SECS).await;
+        }
+    });
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn codigo_da_loja_vem_do_nome_do_arquivo() {
+        let token = "6c6f6a612d74657374-0123456789abcdef0123";
+        assert_eq!(
+            parse_store_token(&format!(r"C:\Users\x\Downloads\SuporteNive_{token}.exe")),
+            Some(token.to_owned())
+        );
+        assert_eq!(
+            parse_store_token(&format!("SuporteNive_{token} (1).exe")),
+            Some(token.to_owned())
+        );
+        assert_eq!(parse_store_token("SuporteNive.exe"), None);
+        assert_eq!(parse_store_token("rustdesk.exe"), None);
+    }
 
     #[test]
     fn aceite_por_clique_e_servidor_da_nive() {
