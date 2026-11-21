@@ -41,6 +41,14 @@ pub fn apply() {
     ] {
         builtin.insert(k.to_owned(), "Y".to_owned());
     }
+    drop(builtin);
+
+    // Sem porta de entrada no Windows: abrir uma (conexão direta ou rede local) dispara o
+    // aviso do firewall, que pede administrador. A conexão vai sempre pelo relay da Nive.
+    config::HARD_SETTINGS
+        .write()
+        .unwrap()
+        .insert("disable-tcp-listen".to_owned(), "Y".to_owned());
 }
 
 const CHECKIN_URL: &str = "https://erp.nivesistemas.com.br/api/public/suporte-remoto/checkin";
