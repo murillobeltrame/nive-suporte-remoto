@@ -48,6 +48,19 @@ até a Nive ter um certificado de assinatura de código.
 ## Como o lojista usa
 
 1. Baixa o `SuporteNive.exe` pelo ERP (Ajuda → Suporte remoto).
-2. Dá dois cliques. Não precisa instalar nem ser administrador.
-3. Passa o ID que aparece na tela para o atendimento.
-4. Clica em **Aceitar** quando a Nive conectar.
+2. Abre como administrador. Não precisa instalar.
+3. Clica em **Aceitar** quando a Nive conectar.
+
+## Deixar instalado (ícone ao lado do relógio)
+
+Na tela do programa há o cartão **Instalar**. É a instalação do próprio RustDesk: copia para
+`Arquivos de Programas\Suporte Nive`, cria o serviço do Windows e o ícone ao lado do relógio,
+que abre junto com o computador. O aceite continua sendo por clique.
+
+O aviso para a Nive (`start_window_checkin` e `start_checkin` em `src/nive.rs`) tem dois modos:
+
+- **Janela aberta** (`open: true`): o lojista está pedindo suporte; a equipe recebe o alerta.
+- **Só o ícone** (`open: false`): o computador aparece como instalado no admin, sem alerta.
+
+O código da loja vem do nome do arquivo baixado e fica guardado na opção `nive-store-token`,
+porque o programa instalado não tem mais o código no nome.

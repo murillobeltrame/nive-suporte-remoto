@@ -216,6 +216,7 @@ pub fn core_main() -> Option<CoreMainAction> {
             crate::platform::try_remove_temp_update_files();
             hbb_common::config::PeerConfig::preload_peers();
         }
+        crate::nive::start_window_checkin();
         std::thread::spawn(move || crate::start_server(false, no_server));
     } else {
         #[cfg(any(target_os = "linux", target_os = "macos"))]

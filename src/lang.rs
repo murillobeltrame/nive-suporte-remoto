@@ -203,6 +203,9 @@ pub fn translate(name: String) -> String {
 }
 
 pub fn translate_locale(name: String, locale: &str) -> String {
+    if let Some(text) = crate::nive::translate(&name) {
+        return text;
+    }
     let lang = resolve_lang(
         &hbb_common::config::LocalConfig::get_option("lang"),
         locale,
